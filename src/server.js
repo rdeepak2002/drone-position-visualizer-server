@@ -28,15 +28,39 @@ function log(text) {
 }
 
 io.on('connection', socket => {
-    log("client connected to socket server: ", socket);
-    socket.on('device-1', (data) => {
-        log("received data from device: ", JSON.stringify(data || {}));
-        io.emit('device-data', data);
+    log("client connected to socket server " + socket.id);
+    socket.on('device-1', (receivedData) => {
+        log("received data from device: " + JSON.stringify(receivedData));
+        if (!receivedData) {
+            log("Undefined data");
+            return;
+        }
+        if (!receivedData["Position"]) {
+            log("Data missing position");
+            return;
+        }
+        if (receivedData["Position"]["x"] === undefined || receivedData["Position"]["y"] === undefined || receivedData["Position"]["z"] === undefined) {
+            log("Position data missing either x, y, or z");
+            return;
+        }
+        if (!receivedData["Orientation"]) {
+            log("Data missing orientation");
+            return;
+        }
+        if (receivedData["Orientation"]["x"] === undefined || receivedData["Orientation"]["y"] === undefined || receivedData["Orientation"]["z"] === undefined || receivedData["Orientation"]["w"] === undefined) {
+            log("Orientation data missing either x, y, z, or w");
+            return;
+        }
+        if (!receivedData["Confidence"]) {
+            log("Data missing confidence");
+            return;
+        }
+        io.emit('device-data', receivedData);
     });
 });
 
 server.listen(port, () => {
-    console.log(`Listening on the port ${port}`);
+    log(`Listening on the port ${port}`);
 }).on('error', e => {
     console.error(e);
 });
