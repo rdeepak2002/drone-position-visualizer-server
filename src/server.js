@@ -38,7 +38,12 @@ io.on('connection', socket => {
     socket.on('device-1', (receivedData1) => {
         let receivedData = receivedData1;
         if (typeof receivedData === 'string' || receivedData instanceof String) {
-            receivedData = JSON.parseObject(receivedData);
+            try {
+                receivedData = JSON.parse(receivedData);
+            } catch (e) {
+                log("Unable to convert device data to JSON object: " + receivedData1);
+                return;
+            }
         }
         log("received data from device: " + JSON.stringify(receivedData));
         if (!receivedData) {
