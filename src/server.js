@@ -35,7 +35,11 @@ function log(text) {
 
 io.on('connection', socket => {
     log("client connected to socket server " + socket.id);
-    socket.on('device-1', (receivedData) => {
+    socket.on('device-1', (receivedData1) => {
+        let receivedData = receivedData1;
+        if (typeof receivedData === 'string' || receivedData instanceof String) {
+            receivedData = JSON.parseObject(receivedData);
+        }
         log("received data from device: " + JSON.stringify(receivedData));
         if (!receivedData) {
             log("Undefined data");
