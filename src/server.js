@@ -8,9 +8,9 @@ const port = process.env.PORT || 8080;
 const loggingEnabled = process?.env?.LOGGING_ENABLED === "TRUE";
 const app = express();
 console.log("current directory: ", __dirname);
-app.use(express.static(path.join(__dirname, "..", "..", "build")));
+app.use(express.static(path.join("build")));
 app.use((req, res, next) => {
-    res.sendFile(path.join(__dirname, "..", "..", "build", "index.html"));
+    res.sendFile(path.join("build", "index.html"));
 });
 const server = http.createServer(app);
 const io = new Server(server, {
