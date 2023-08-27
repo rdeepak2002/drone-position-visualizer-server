@@ -11,7 +11,9 @@
     "nodemon": "^2.0.20"
   },
   "dependencies": {
+    "@influxdata/influxdb3-client": "^0.2.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "http": "^0.0.1-security",
     "path": "^0.12.7",
