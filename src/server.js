@@ -35,6 +35,14 @@ function log(text) {
 
 io.on('connection', socket => {
     log("client connected to socket server " + socket.id);
+    socket.on('start', (lat, lng) => {
+        log(`Received start message ${lat} ${lng}`);
+        io.emit('start', lat, lng);
+    });
+    socket.on('stop', () => {
+        log("Received stop message");
+        io.emit('stop');
+    });
     socket.on('device-1', (receivedData1) => {
         let receivedData = receivedData1;
         if (typeof receivedData === 'string' || receivedData instanceof String) {
