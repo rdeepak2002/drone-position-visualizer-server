@@ -74,9 +74,14 @@ function warn(text) {
     }
 }
 
-function logLatLong(lat_in, long_in) {
-    let lat, long;
+function logLatLong(lat_in, long_in, alt_in) {
+    let lat, long, alt;
     try {
+        if (typeof alt_in == 'number' && !isNaN(alt_in)) {
+            alt = alt_in;
+        } else {
+            alt = parseFloat(alt_in);
+        }
         if (typeof lat_in == 'number' && !isNaN(lat_in)) {
             lat = lat_in;
         } else {
@@ -88,7 +93,7 @@ function logLatLong(lat_in, long_in) {
             long = parseFloat(long_in);
         }
     } catch (e) {
-        warn(`(1) Unable to parse lat long ${lat_in} ${long_in}`);
+        warn(`(1) Unable to parse lat long ${lat_in} ${long_in} ${alt_in}`);
         return;
     }
     if (isNaN(lat)) {
@@ -99,31 +104,36 @@ function logLatLong(lat_in, long_in) {
         warn(`Long is not a number ${long}`);
         return;
     }
+    if (isNaN(alt)) {
+        warn(`Alt is not a number ${alt}`);
+        return;
+    }
     const point = new Point("latlong")
         .tag("device", "device-1")
         .timestamp(new Date())
         .floatField("lat", lat)
-        .floatField("long", long);
+        .floatField("long", long)
+        .floatField("alt", alt);
     influxDBClient.write(point, influxDBDatabase).then(() => {
-        log(`Wrote ${lat}, ${long} to InfluxDB`);
+        log(`Wrote ${lat}, ${long}, ${alt} to InfluxDB`);
     }).catch((e) => {
-        log.warn(`Unable to write lat long ${lat}, ${long} to InfluxDB`, e);
+        log.warn(`Unable to write lat long ${lat}, ${long}, ${alt} to InfluxDB`, e);
     });
 }
 
 io.on('connection', socket => {
     log("client connected to socket server " + socket.id);
-    socket.on('log-lat-long', (lat_in, long_in) => {
-        log(`Logging lat long ${lat_in} ${long_in}`);
-        logLatLong(lat_in, long_in);
+    socket.on('log-lat-long', (lat_in, long_in, alt_in) => {
+        log(`Logging lat long ${lat_in} ${long_in} ${alt_in}`);
+        logLatLong(lat_in, long_in, alt_in);
     });
     socket.on('log-lat-long-json', (data) => {
         log(`Logging lat long json ${data}`);
-        logLatLong(data["lat"], data["long"]);
+        logLatLong(data["lat"], data["long"], data["alt"]);
     });
-    socket.on('start', (lat, lng) => {
-        log(`Received start message ${lat} ${lng}`);
-        io.emit('start', lat, lng);
+    socket.on('start', (lat, lng, alt) => {
+        log(`Received start message ${lat} ${lng} ${alt}`);
+        io.emit('start', lat, lng, alt);
     });
     socket.on('stop', () => {
         log("Received stop message");
