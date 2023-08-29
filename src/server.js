@@ -114,9 +114,11 @@ function logLatLong(lat_in, long_in) {
 io.on('connection', socket => {
     log("client connected to socket server " + socket.id);
     socket.on('log-lat-long', (lat_in, long_in) => {
+        log(`Logging lat long ${lat_in} ${long_in}`);
         logLatLong(lat_in, long_in);
     });
     socket.on('log-lat-long-json', (data) => {
+        log(`Logging lat long json ${data}`);
         logLatLong(data["lat"], data["long"]);
     });
     socket.on('start', (lat, lng) => {
