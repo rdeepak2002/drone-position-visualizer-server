@@ -35,7 +35,7 @@ yarn start
 
 ## Expected Device Data Format
 
-- Send a socket.io message to ``device-1`` with the following content
+- Send a socket.io message to ``unit-update`` with the following content
 
 ```json
 {
@@ -50,6 +50,7 @@ yarn start
     "z": 0.0,
     "w": 0.0
   },
-  "Confidence": "0x2"
+  "Confidence": "0x2",
+  "ID": "unit-1"
 }
 ```
