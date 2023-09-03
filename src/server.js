@@ -74,33 +74,37 @@ function warn(text) {
     }
 }
 
-function logLatLong(lat_in, long_in) {
+function logLatLong(latIn, longIn, idIn) {
     let lat, long;
     try {
-        if (typeof lat_in == 'number' && !isNaN(lat_in)) {
-            lat = lat_in;
+        if (typeof latIn == 'number' && !isNaN(latIn)) {
+            lat = latIn;
         } else {
-            lat = parseFloat(lat_in);
+            lat = parseFloat(latIn);
         }
-        if (typeof long_in == 'number' && !isNaN(long_in)) {
-            long = long_in;
+        if (typeof longIn == 'number' && !isNaN(longIn)) {
+            long = longIn;
         } else {
-            long = parseFloat(long_in);
+            long = parseFloat(longIn);
         }
     } catch (e) {
-        warn(`(1) Unable to parse lat long ${lat_in} ${long_in}`);
+        warn(`Unable to parse lat long for logging ${latIn} ${longIn}`);
         return;
     }
     if (isNaN(lat)) {
-        warn(`Lat is not a number ${lat}`);
+        warn(`Lat is not a number for logging ${lat}`);
         return;
     }
     if (isNaN(long)) {
-        warn(`Long is not a number ${long}`);
+        warn(`Long is not a number for logging ${long}`);
+        return;
+    }
+    if (idIn === undefined) {
+        warn(`ID is undefined for logging ${idIn}`);
         return;
     }
     const point = new Point("latlong")
-        .tag("device", "device-1")
+        .tag("unit", idIn || 'None')
         .timestamp(new Date())
         .floatField("lat", lat)
         .floatField("long", long);
@@ -113,33 +117,36 @@ function logLatLong(lat_in, long_in) {
 
 io.on('connection', socket => {
     log("client connected to socket server " + socket.id);
-    socket.on('log-lat-long', (lat_in, long_in) => {
-        logLatLong(lat_in, long_in);
+    socket.on('log-lat-long', (lat_in, long_in, id_in) => {
+        logLatLong(lat_in, long_in, id_in);
     });
     socket.on('log-lat-long-json', (data) => {
-        logLatLong(data["lat"], data["long"]);
+        logLatLong(data["lat"], data["long"], data["id"]);
     });
-    socket.on('start', (lat, lng) => {
-        log(`Received start message ${lat} ${lng}`);
-        io.emit('start', lat, lng);
+    socket.on('start', (lat, lng, id) => {
+        log(`Received start message, lat: ${lat}, lng: ${lng}, id: ${id}`);
+        io.emit('start', lat, lng, id);
     });
-    socket.on('stop', () => {
+    socket.on('stop', (id) => {
         log("Received stop message");
-        io.emit('stop');
+        io.emit('stop', id);
     });
-    socket.on('device-1', (receivedData1) => {
-        let receivedData = receivedData1;
+    socket.on('unit-update', (receivedDataIn) => {
+        let receivedData = receivedDataIn;
         if (typeof receivedData === 'string' || receivedData instanceof String) {
             try {
                 receivedData = JSON.parse(receivedData);
             } catch (e) {
-                log("Unable to convert device data to JSON object: " + receivedData1);
+                log("Unable to convert device data to JSON object: " + receivedDataIn);
                 return;
             }
         }
-        log("received data from device: " + JSON.stringify(receivedData));
         if (!receivedData) {
             log("Undefined data");
+            return;
+        }
+        if (!receivedData["ID"]) {
+            log("Data missing ID");
             return;
         }
         if (!receivedData["Position"]) {
@@ -162,6 +169,7 @@ io.on('connection', socket => {
             log("Data missing confidence");
             return;
         }
+        log("Emitting data from device: " + receivedData);
         io.emit('device-data', receivedData);
     });
 });
