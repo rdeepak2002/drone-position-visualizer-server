@@ -140,7 +140,7 @@ io.on('connection', socket => {
         io.emit('start', lat, lng, alt, id);
     });
     socket.on('stop', (id) => {
-        log("Received stop message");
+        log(`Received stop message id: ${id}`);
         io.emit('stop', id);
     });
     socket.on('unit-update', (receivedDataIn) => {
