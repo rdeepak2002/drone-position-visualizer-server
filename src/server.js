@@ -181,7 +181,7 @@ io.on('connection', socket => {
             log("Data missing confidence");
             return;
         }
-        log("Emitting data from device: " + receivedData);
+        log("Emitting data from device: " + JSON.stringify(receivedData));
         io.emit('device-data', receivedData);
     });
 });
