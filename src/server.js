@@ -143,6 +143,10 @@ io.on('connection', socket => {
         log(`Received stop message id: ${id}`);
         io.emit('stop', id);
     });
+    socket.on('biometrics', (id, unitName, heartRate, bloodO2, bodyTemp) => {
+        log(`Received biometrics ID: ${id} unit name: ${unitName} heart rate: ${heartRate} blood O2: ${bloodO2} body temp: ${bodyTemp}`);
+        io.emit('biometrics', id, unitName, heartRate, bloodO2, bodyTemp);
+    });
     socket.on('unit-update', (receivedDataIn) => {
         let receivedData = receivedDataIn;
         if (typeof receivedData === 'string' || receivedData instanceof String) {
