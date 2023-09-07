@@ -143,6 +143,19 @@ io.on('connection', socket => {
         log(`Received stop message id: ${id}`);
         io.emit('stop', id);
     });
+    socket.on('biometrics-json', (receivedDataIn) => {
+        let receivedData = receivedDataIn;
+        if (typeof receivedData === 'string' || receivedData instanceof String) {
+            try {
+                receivedData = JSON.parse(receivedData);
+            } catch (e) {
+                log("Unable to convert biometric data to JSON object: " + receivedData);
+                return;
+            }
+        }
+        log(`Received biometrics ${JSON.stringify(receivedData)}`);
+        io.emit('biometrics', receivedData?.id, receivedData?.unitName, receivedData?.heartRate, receivedData?.bloodO2, receivedData?.bodyTemp);
+    });
     socket.on('biometrics', (id, unitName, heartRate, bloodO2, bodyTemp) => {
         log(`Received biometrics ID: ${id} unit name: ${unitName} heart rate: ${heartRate} blood O2: ${bloodO2} body temp: ${bodyTemp}`);
         io.emit('biometrics', id, unitName, heartRate, bloodO2, bodyTemp);
