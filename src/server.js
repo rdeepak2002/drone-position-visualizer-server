@@ -57,10 +57,10 @@ app.get('/api/v1/lat-long-logs', async (req, res) => {
     // console.log("Returning result to client ", result);
     res.send(result);
 });
-app.use(express.static(path.join(__dirname, "build")));
-app.use((req, res, next) => {
-    res.sendFile(path.join(__dirname, "build", "index.html"));
-});
+// app.use(express.static(path.join(__dirname, ".")));
+// app.use((req, res, next) => {
+//     res.sendFile(path.join(__dirname, "build", "index.html"));
+// });
 
 function log(text) {
     if (loggingEnabled) {

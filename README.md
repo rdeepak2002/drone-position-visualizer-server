@@ -54,3 +54,15 @@ yarn start
   "ID": "unit-1"
 }
 ```
+
+- Send a socket.io message to ``biometrics-json`` with the following content
+
+```json
+{
+  "id": 1,
+  "unitName": "B. Krakowsky",
+  "heartRate": 100,
+  "bloodO2": 95,
+  "bodyTemp": 99
+}
+```
