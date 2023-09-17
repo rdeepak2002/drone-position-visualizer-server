@@ -205,7 +205,16 @@ io.on('connection', socket => {
         log(`Received biometrics ID: ${id} unit name: ${unitName} heart rate: ${heartRate} blood O2: ${bloodO2} body temp: ${bodyTemp}`);
         io.emit('biometrics', id, unitName, heartRate, bloodO2, bodyTemp);
     });
-    socket.on('send-competition-data', (payload) => {
+    socket.on('send-competition-data', (payloadIn) => {
+        let payload = {};
+        if (typeof payloadIn === 'string' || payloadIn instanceof String) {
+            try {
+                payload = JSON.parse(payloadIn);
+            } catch (e) {
+                log("Unable to convert device data to JSON object: " + payloadIn);
+                return;
+            }
+        }
         log(`Sending competition data`, payload);
         sendCompetitionData(payload, (error, httpResponse, body) => {
             io.emit('competition-data-result', (httpResponse?.body || 'none').toString());
