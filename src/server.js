@@ -7,6 +7,7 @@ const cors = require('cors');
 const http = require('http');
 const path = require('path');
 const {Server} = require('socket.io');
+const request = require('request');
 
 const port = process.env.PORT || 8080;
 const loggingEnabled = process?.env?.LOGGING_ENABLED === "TRUE";
@@ -39,6 +40,9 @@ const influxDBClient = new InfluxDBClient({
 });
 const influxDBDatabase = process?.env?.INFLUXDB_DATABASE || `drone-position-visualizer-server`
 
+const certificate = new Buffer(getEnvVariable("BASE_64_ENCODED_CERTIFICATE"), 'base64').toString();
+const privateKey = new Buffer(getEnvVariable("BASE_64_ENCODED_PRIVATE_KEY"), 'base64').toString();
+
 app.use(cors({origin: "*"}));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -57,6 +61,47 @@ app.get('/api/v1/lat-long-logs', async (req, res) => {
     // console.log("Returning result to client ", result);
     res.send(result);
 });
+
+function sendCompetitionData(payload, cb) {
+    const url = "https://a1m2ll84zs7epx-ats.iot.us-east-2.amazonaws.com:8443/topics/adaptitrace";
+    request({
+        method: "POST",
+        uri: url,
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload),
+        agentOptions: {
+            cert: certificate,
+            key: privateKey
+        }
+    }, function(error, httpResponse, body) {
+        if (error) {
+            console.error("Unable to send competition data", error, body);
+        } else {
+            console.debug("Successful request to competition server", body);
+        }
+        if (cb) {
+            cb(error, httpResponse, body);
+        }
+    });
+}
+
+app.post('/api/v1/send-competition-data', async (req, res) => {
+    sendCompetitionData(req.body, (error, httpResponse, body) => {
+        if (httpResponse?.headers) {
+            res.headers = httpResponse?.headers;
+        }
+        if (httpResponse?.statusCode) {
+            res.statusCode = httpResponse?.statusCode;
+        }
+        if (httpResponse?.request) {
+            res.request = httpResponse?.request;
+        }
+        res.send(httpResponse?.body);
+    });
+});
+
 // app.use(express.static(path.join(__dirname, ".")));
 // app.use((req, res, next) => {
 //     res.sendFile(path.join(__dirname, "build", "index.html"));
@@ -159,6 +204,12 @@ io.on('connection', socket => {
     socket.on('biometrics', (id, unitName, heartRate, bloodO2, bodyTemp) => {
         log(`Received biometrics ID: ${id} unit name: ${unitName} heart rate: ${heartRate} blood O2: ${bloodO2} body temp: ${bodyTemp}`);
         io.emit('biometrics', id, unitName, heartRate, bloodO2, bodyTemp);
+    });
+    socket.on('send-competition-data', (payload) => {
+        log(`Sending competition data`, payload);
+        sendCompetitionData(payload, (error, httpResponse, body) => {
+            io.emit('competition-data-result', (httpResponse?.body || 'none').toString());
+        });
     });
     socket.on('unit-update', (receivedDataIn) => {
         let receivedData = receivedDataIn;
