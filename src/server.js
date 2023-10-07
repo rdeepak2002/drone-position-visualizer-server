@@ -191,9 +191,9 @@ io.on('connection', socket => {
         log(`Logging lat long json ${data}`);
         logLatLong(data["lat"], data["long"], data["alt"], data["id"]);
     });
-    socket.on('start', (lat, lng, alt, id) => {
-        log(`Received start message, lat: ${lat}, lng: ${lng}, alt: ${alt}, id: ${tryParseInt(id)}`);
-        io.emit('start', lat, lng, alt, tryParseInt(id));
+    socket.on('start', (lat, lng, alt, id, scenario) => {
+        log(`Received start message, lat: ${lat}, lng: ${lng}, alt: ${alt}, id: ${tryParseInt(id)}, scenario: ${scenario}`);
+        io.emit('start', lat, lng, alt, tryParseInt(id), scenario);
     });
     socket.on('stop', (id) => {
         log(`Received stop message id: ${tryParseInt(id)}`);
