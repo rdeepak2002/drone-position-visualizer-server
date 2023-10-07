@@ -170,6 +170,17 @@ function logLatLong(latIn, longIn, altIn, idIn) {
     });
 }
 
+/**
+ * Attempt parsing value as int and return that int, or return that avlue itself
+ */
+function tryParseInt(id) {
+    let intId = parseInt(id);
+    if (isNaN(intId)) {
+        return id;
+    }
+    return intId;
+}
+
 io.on('connection', socket => {
     log("client connected to socket server " + socket.id);
     socket.on('log-lat-long', (lat_in, long_in, alt_in, id_in) => {
@@ -181,12 +192,16 @@ io.on('connection', socket => {
         logLatLong(data["lat"], data["long"], data["alt"], data["id"]);
     });
     socket.on('start', (lat, lng, alt, id) => {
-        log(`Received start message, lat: ${lat}, lng: ${lng}, alt: ${alt}, id: ${id}`);
-        io.emit('start', lat, lng, alt, id);
+        log(`Received start message, lat: ${lat}, lng: ${lng}, alt: ${alt}, id: ${tryParseInt(id)}`);
+        io.emit('start', lat, lng, alt, tryParseInt(id));
     });
     socket.on('stop', (id) => {
-        log(`Received stop message id: ${id}`);
-        io.emit('stop', id);
+        log(`Received stop message id: ${tryParseInt(id)}`);
+        io.emit('stop', tryParseInt(id));
+    });
+    socket.on('upload', (id) => {
+        log(`Received upload message id: ${tryParseInt(id)}`);
+        io.emit('upload', tryParseInt(id));
     });
     socket.on('biometrics-json', (receivedDataIn) => {
         let receivedData = receivedDataIn;
