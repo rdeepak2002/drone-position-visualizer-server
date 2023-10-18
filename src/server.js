@@ -221,6 +221,7 @@ io.on('connection', socket => {
         io.emit('biometrics', id, unitName, heartRate, bloodO2, bodyTemp);
     });
     socket.on('send-competition-data', (payloadIn) => {
+        console.time("send-competition-data-method-start");
         let payload = {};
         if (typeof payloadIn === 'string' || payloadIn instanceof String) {
             try {
@@ -231,11 +232,15 @@ io.on('connection', socket => {
             }
         }
         log(`Sending competition data`, payload);
+        console.time("sending-to-aws-server");
         sendCompetitionData(payload, (error, httpResponse, body) => {
             io.emit('competition-data-result', (httpResponse?.body || 'none').toString());
+            console.timeEnd("sending-to-aws-server");
         });
+        console.timeEnd("send-competition-data-method-end");
     });
     socket.on('unit-update', (receivedDataIn) => {
+        console.time("unit-update");
         let receivedData = receivedDataIn;
         if (typeof receivedData === 'string' || receivedData instanceof String) {
             try {
@@ -275,6 +280,7 @@ io.on('connection', socket => {
         }
         log("Emitting data from device: " + JSON.stringify(receivedData));
         io.emit('device-data', receivedData);
+        console.timeEnd("unit-update");
     });
 });
 
