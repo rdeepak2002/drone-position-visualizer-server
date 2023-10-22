@@ -24,6 +24,9 @@ const io = new Server(server, {
     }
 });
 
+let transmitDataToCompetitionServer = (process?.env?.TRANSMIT_COMP_DATA === "TRUE");
+console.debug("Initial value of transmitDataToCompetitionServer: ", transmitDataToCompetitionServer);
+
 function getEnvVariable(varName) {
     let result = process?.env[varName];
     if (!result) {
@@ -63,28 +66,33 @@ app.get('/api/v1/lat-long-logs', async (req, res) => {
 });
 
 function sendCompetitionData(payload, cb) {
-    const url = "https://a1m2ll84zs7epx-ats.iot.us-east-2.amazonaws.com:8443/topics/adaptitrace";
-    request({
-        method: "POST",
-        uri: url,
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload),
-        agentOptions: {
-            cert: certificate,
-            key: privateKey
-        }
-    }, function(error, httpResponse, body) {
-        if (error) {
-            console.error("Unable to send competition data", error, body);
-        } else {
-            console.debug("Successful request to competition server", body);
-        }
-        if (cb) {
-            cb(error, httpResponse, body);
-        }
-    });
+    if (transmitDataToCompetitionServer) {
+        console.debug("Transmitting of competition server data enabled");
+        const url = "https://a1m2ll84zs7epx-ats.iot.us-east-2.amazonaws.com:8443/topics/adaptitrace";
+        request({
+            method: "POST",
+            uri: url,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload),
+            agentOptions: {
+                cert: certificate,
+                key: privateKey
+            }
+        }, function(error, httpResponse, body) {
+            if (error) {
+                console.error("Unable to send competition data", error, body);
+            } else {
+                console.debug("Successful request to competition server", body);
+            }
+            if (cb) {
+                cb(error, httpResponse, body);
+            }
+        });
+    } else {
+        console.warn("Transmitting of competition server data disabled");
+    }
 }
 
 app.post('/api/v1/send-competition-data', async (req, res) => {
@@ -219,6 +227,14 @@ io.on('connection', socket => {
     socket.on('biometrics', (id, unitName, heartRate, bloodO2, bodyTemp) => {
         log(`Received biometrics ID: ${id} unit name: ${unitName} heart rate: ${heartRate} blood O2: ${bloodO2} body temp: ${bodyTemp}`);
         io.emit('biometrics', id, unitName, heartRate, bloodO2, bodyTemp);
+    });
+    socket.on('transmit-comp-data', (val) => {
+        if (typeof val == "boolean") {
+            transmitDataToCompetitionServer = val;
+            io.emit('transmit-comp-data', val);
+        } else {
+            io.emit('transmit-comp-data', transmitDataToCompetitionServer);
+        }
     });
     socket.on('send-competition-data', (payloadIn) => {
         console.time("send-competition-data-method");
