@@ -70,7 +70,7 @@ function sendCompetitionData(payload, cb) {
     if (transmitDataToCompetitionServer) {
         console.debug("Transmitting of competition server data enabled");
         const url = "https://a1m2ll84zs7epx-ats.iot.us-east-2.amazonaws.com:8443/topics/adaptitrace";
-        console.debug("Sending payload to competition server body", payload?.body || "No body");
+        console.debug("Sending payload to competition server body", JSON.parse(JSON.stringify(payload)));
         request({
             method: "POST",
             uri: url,
