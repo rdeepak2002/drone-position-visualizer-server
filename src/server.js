@@ -66,6 +66,7 @@ app.get('/api/v1/lat-long-logs', async (req, res) => {
 });
 
 function sendCompetitionData(payload, cb) {
+    console.time("sending-to-aws-server");
     if (transmitDataToCompetitionServer) {
         console.debug("Transmitting of competition server data enabled");
         const url = "https://a1m2ll84zs7epx-ats.iot.us-east-2.amazonaws.com:8443/topics/adaptitrace";
@@ -93,6 +94,7 @@ function sendCompetitionData(payload, cb) {
     } else {
         console.warn("Transmitting of competition server data disabled");
     }
+    console.timeEnd("sending-to-aws-server");
 }
 
 app.post('/api/v1/send-competition-data', async (req, res) => {
@@ -248,10 +250,8 @@ io.on('connection', socket => {
             }
         }
         log(`Sending competition data`, payload);
-        console.time("sending-to-aws-server");
         sendCompetitionData(payload, (error, httpResponse, body) => {
             io.emit('competition-data-result', (httpResponse?.body || 'none').toString());
-            console.timeEnd("sending-to-aws-server");
         });
         console.timeEnd("send-competition-data-method");
     });
