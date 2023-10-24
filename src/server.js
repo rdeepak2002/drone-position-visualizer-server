@@ -87,7 +87,7 @@ function sendCompetitionData(payload, cb) {
                 console.error("Unable to send competition data", error, body);
             } else {
                 console.debug("Successful request to competition server", body);
-                console.debug("Got back response from competition server", httpResponse);
+                // console.debug("Got back response from competition server", httpResponse);
             }
             if (cb) {
                 cb(error, httpResponse, body);
